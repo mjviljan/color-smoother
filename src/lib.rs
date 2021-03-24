@@ -51,4 +51,11 @@ mod tests {
         assert_eq!(universe.width, expected_side_length);
         assert_eq!(universe.height, expected_side_length);
     }
+
+    #[test]
+    #[should_panic]
+    fn cells_with_non_power_of_two_length_fail_to_create_universe() {
+        let cells: Vec<u8> = vec![1, 2, 3];
+        Universe::new(cells);
+    }
 }
