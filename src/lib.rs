@@ -1,13 +1,39 @@
 use std::fmt::{Debug, Error, Formatter};
 
+#[derive(Debug)]
+pub struct Cell {
+    value: u8,
+}
+
+impl Cell {
+    pub fn new(value: u8) -> Cell {
+        Cell { value }
+    }
+}
+
+#[cfg(test)]
+impl Clone for Cell {
+    fn clone(&self) -> Self {
+        Cell {
+            value: self.value
+        }
+    }
+}
+#[cfg(test)]
+impl PartialEq for Cell {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value
+    }
+}
+
 pub struct Universe {
     width: u8,
     height: u8,
-    cells: Vec<u8>,
+    cells: Vec<Cell>,
 }
 
 impl Universe {
-    pub fn new(cells: Vec<u8>) -> Universe {
+    pub fn new(cells: Vec<Cell>) -> Universe {
         let root = f32::sqrt(cells.len() as f32);
 
         if root.fract() != 0.0 {
@@ -34,7 +60,7 @@ impl Universe {
         self.height
     }
 
-    pub fn cells(&self) -> &Vec<u8> {
+    pub fn cells(&self) -> &Vec<Cell> {
         &self.cells
     }
 }
@@ -49,7 +75,7 @@ impl Debug for Universe {
             for col in 0..self.width {
                 s.push_str(&format!(
                     "{:>2}|",
-                    self.cells[(row * self.width + col) as usize]
+                    self.cells[(row * self.width + col) as usize].value
                 ));
             }
         }
@@ -60,13 +86,13 @@ impl Debug for Universe {
 
 #[cfg(test)]
 mod universe_tests {
-    use crate::Universe;
+    use crate::{Cell, Universe};
 
     #[test]
     fn cells_with_power_of_two_length_creates_universe_with_root_of_length_sides() {
         let expected_side_length: u8 = 5;
 
-        let cells = vec![1; expected_side_length.pow(2) as usize];
+        let cells = vec![Cell::new(1); expected_side_length.pow(2) as usize];
         let universe = Universe::new(cells);
 
         assert_eq!(universe.width, expected_side_length);
@@ -76,22 +102,22 @@ mod universe_tests {
     #[test]
     #[should_panic]
     fn cells_with_non_power_of_two_length_fail_to_create_universe() {
-        let cells = vec![1, 2, 3];
+        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3)];
         Universe::new(cells);
     }
 
     #[test]
     fn cells_of_universe_should_match_created_ones_before_evolution() {
-        let cells = vec![1, 2, 3, 4];
+        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
         let universe = Universe::new(cells);
 
-        let expected_cells: Vec<u8> = vec![1, 2, 3, 4];
+        let expected_cells: Vec<Cell> = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
         assert_eq!(universe.cells(), &expected_cells);
     }
 
     #[test]
     fn cells_of_universe_should_evolve() {
-        let cells = vec![1, 3, 3, 3];
+        let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
         let universe = Universe::new(cells);
 
         // just debug print the universe for now (actual test TBD)
