@@ -10,17 +10,25 @@ impl Cell {
         Cell { value }
     }
 
-    pub fn evolve(&mut self, cardinal_neighbours: Vec<Cell>, diagonal_neighbours: Vec<Cell>) {
-        let cardinal_sum: u8 = cardinal_neighbours
-            .iter()
-            .fold(0, |acc, cell| acc + cell.value);
-        let diagonal_sum: u8 = diagonal_neighbours
-            .iter()
-            .fold(0, |acc, cell| acc + cell.value);
+    fn sum_of_cells(cells: &Vec<Cell>) -> u8 {
+        cells.iter().fold(0, |acc, cell| acc + cell.value)
+    }
 
-        // use weighted average: cardinal neighbours have double the weight of diagonal neighbours
-        let weighted_average = (cardinal_sum * 2 + diagonal_sum) as f32
-            / (cardinal_neighbours.len() * 2 + diagonal_neighbours.len()) as f32;
+    fn weighted_average_of_neighbours(
+        cardinal_neighbours: &Vec<Cell>,
+        diagonal_neighbours: &Vec<Cell>,
+    ) -> f32 {
+        let cardinal_sum: u8 = Cell::sum_of_cells(&cardinal_neighbours);
+        let diagonal_sum: u8 = Cell::sum_of_cells(&diagonal_neighbours);
+
+        // weighted average: cardinal neighbours have double the weight of diagonal neighbours
+        (cardinal_sum * 2 + diagonal_sum) as f32
+            / (cardinal_neighbours.len() * 2 + diagonal_neighbours.len()) as f32
+    }
+
+    pub fn evolve(&mut self, cardinal_neighbours: Vec<Cell>, diagonal_neighbours: Vec<Cell>) {
+        let weighted_average =
+            Cell::weighted_average_of_neighbours(&cardinal_neighbours, &diagonal_neighbours);
 
         let rounded_average = f32::round(weighted_average) as u8;
 
