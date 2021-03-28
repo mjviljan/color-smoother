@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Error, Formatter};
 
-#[derive(Debug)]
+// Clone and Eq's only used in test but #![cfg_attr…] doesn't seem to work
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Cell {
     value: u8,
 }
@@ -8,21 +9,6 @@ pub struct Cell {
 impl Cell {
     pub fn new(value: u8) -> Cell {
         Cell { value }
-    }
-}
-
-#[cfg(test)]
-impl Clone for Cell {
-    fn clone(&self) -> Self {
-        Cell {
-            value: self.value
-        }
-    }
-}
-#[cfg(test)]
-impl PartialEq for Cell {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
     }
 }
 
