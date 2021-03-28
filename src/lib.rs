@@ -11,13 +11,13 @@ impl Cell {
         Cell { value }
     }
 
-    fn sum_of_cells(cells: &Vec<Cell>) -> u8 {
+    fn sum_of_cells(cells: &Vec<&Cell>) -> u8 {
         cells.iter().fold(0, |acc, cell| acc + cell.value)
     }
 
     fn weighted_average_of_neighbours(
-        cardinal_neighbours: &Vec<Cell>,
-        diagonal_neighbours: &Vec<Cell>,
+        cardinal_neighbours: &Vec<&Cell>,
+        diagonal_neighbours: &Vec<&Cell>,
     ) -> f32 {
         let cardinal_sum: u8 = Cell::sum_of_cells(&cardinal_neighbours);
         let diagonal_sum: u8 = Cell::sum_of_cells(&diagonal_neighbours);
@@ -29,8 +29,8 @@ impl Cell {
 
     pub fn evolve(
         &self,
-        cardinal_neighbours: &Vec<Cell>,
-        diagonal_neighbours: &Vec<Cell>,
+        cardinal_neighbours: &Vec<&Cell>,
+        diagonal_neighbours: &Vec<&Cell>,
     ) -> Cell {
         let weighted_average =
             Cell::weighted_average_of_neighbours(&cardinal_neighbours, &diagonal_neighbours);
@@ -93,32 +93,52 @@ impl Universe {
     }
 
     pub fn evolve(&mut self) {
-        // let mut new_cells = Vec::with_capacity((self.width * self.height) as usize);
-        // for row in 0..self.height {
-        //     for col in 0..self.width {
-        //         let cell_index = self.get_cell_index(col, row);
-        //
-        //         // 1. get cardinal neighbours
-        //         let mut cardinal_neighbours: Vec<&Cell> = Vec::new();
-        //         // 2. get diagonal neighbours
-        //         let diagonal_neighbours: Vec<&Cell> = Vec::new();
-        //
-        //         if row > 0 {
-        //             cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row - 1)]);
-        //         }
-        //         if row < self.height - 1 {
-        //             cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row + 1)]);
-        //         }
-        //         if col > 0 {
-        //             cardinal_neighbours.push(&self.cells[self.get_cell_index(col - 1, row)]);
-        //         }
-        //         if col < self.width - 1 {
-        //             cardinal_neighbours.push(&self.cells[self.get_cell_index(col + 1, row)]);
-        //         }
-        //
-        //         new_cells[cell_index] = self.cells[cell_index].evolve(&cardinal_neighbours, &diagonal_neighbours);
-        //     }
-        // }
+        let mut new_cells: Vec<Cell> = Vec::with_capacity((self.width * self.height) as usize);
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let cell_index = self.get_cell_index(col, row);
+
+                let mut cardinal_neighbours: Vec<&Cell> = Vec::new();
+                let mut diagonal_neighbours: Vec<&Cell> = Vec::new();
+
+                if row > 0 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row - 1)]);
+
+                    if col > 0 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col - 1, row - 1)]);
+                    }
+                    if col < self.width - 1 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col + 1, row - 1)]);
+                    }
+                }
+                if row < self.height - 1 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row + 1)]);
+
+                    if col > 0 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col - 1, row + 1)]);
+                    }
+                    if col < self.width - 1 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col + 1, row + 1)]);
+                    }
+                }
+                if col > 0 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col - 1, row)]);
+                }
+                if col < self.width - 1 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col + 1, row)]);
+                }
+
+                new_cells.push(
+                    self.cells[cell_index].evolve(&cardinal_neighbours, &diagonal_neighbours),
+                );
+            }
+        }
+
+        self.cells = new_cells;
     }
 }
 
@@ -149,9 +169,14 @@ mod cell_tests {
     fn cell_evolves_to_higher_value_if_rounded_average_of_neighbours_is_higher() {
         let original_cell = Cell::new(5);
 
+        // these must be created as variables before referring to them in `vec!`,
+        // otherwise they don't live long enough for the reference to work
+        let five_cell = Cell::new(5);
+        let six_cell = Cell::new(6);
+
         // weighted average of neighbours' values is 5.5
-        let cardinal_neighbours = vec![Cell::new(6), Cell::new(5)];
-        let diagonal_neighbours = vec![Cell::new(6), Cell::new(5)];
+        let cardinal_neighbours = vec![&six_cell, &five_cell];
+        let diagonal_neighbours = vec![&six_cell, &five_cell];
         let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
         assert_eq!(new_cell.value, 6);
@@ -161,9 +186,12 @@ mod cell_tests {
     fn cell_evolves_to_lower_value_if_rounded_average_of_neighbours_is_lower() {
         let original_cell = Cell::new(5);
 
+        let four_cell = Cell::new(4);
+        let five_cell = Cell::new(5);
+
         // weighted average of neighbours' values is ~4.4
-        let cardinal_neighbours = vec![Cell::new(5), Cell::new(4)];
-        let diagonal_neighbours = vec![Cell::new(5), Cell::new(4), Cell::new(4)];
+        let cardinal_neighbours = vec![&five_cell, &four_cell];
+        let diagonal_neighbours = vec![&five_cell, &four_cell, &four_cell];
         let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
         assert_eq!(new_cell.value, 4);
@@ -173,9 +201,14 @@ mod cell_tests {
     fn average_of_neighbours_is_weighted_with_cardinal_neighbours_having_more_weight() {
         let original_cell = Cell::new(5);
 
+        let one_cell = Cell::new(1);
+        let two_cell = Cell::new(2);
+        let eight_cell = Cell::new(8);
+        let nine_cell = Cell::new(9);
+
         // average of the neighbours' values is 4.4 but their weighted average is ~5.57
-        let cardinal_neighbours = vec![Cell::new(9), Cell::new(8)];
-        let diagonal_neighbours = vec![Cell::new(2), Cell::new(2), Cell::new(1)];
+        let cardinal_neighbours = vec![&nine_cell, &eight_cell];
+        let diagonal_neighbours = vec![&two_cell, &two_cell, &one_cell];
         let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
         assert_eq!(new_cell.value, 6);
@@ -217,14 +250,11 @@ mod universe_tests {
     #[test]
     fn cells_of_universe_should_evolve() {
         let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
-        let expected_cells = vec![Cell::new(2), Cell::new(3), Cell::new(3), Cell::new(3)];
+        let expected_cells = vec![Cell::new(2), Cell::new(2), Cell::new(2), Cell::new(3)];
 
         let mut universe = Universe::new(cells);
-        println!("Before: {:#?}", universe);
         universe.evolve();
-        // just debug print the universe for now (actual test TBD)
-        println!("After: {:#?}", universe);
 
-        // assert_eq!(universe.cells(), &expected_cells);
+        assert_eq!(universe.cells(), &expected_cells);
     }
 }
