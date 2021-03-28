@@ -29,7 +29,6 @@ impl Cell {
     pub fn evolve(&mut self, cardinal_neighbours: Vec<Cell>, diagonal_neighbours: Vec<Cell>) {
         let weighted_average =
             Cell::weighted_average_of_neighbours(&cardinal_neighbours, &diagonal_neighbours);
-
         let rounded_average = f32::round(weighted_average) as u8;
 
         if rounded_average > self.value {
@@ -124,6 +123,18 @@ mod cell_tests {
         cell.evolve(cardinal_neighbours, diagonal_neighbours);
 
         assert_eq!(cell.value, 4);
+    }
+
+    #[test]
+    fn average_of_neighbours_is_weighted_with_cardinal_neighbours_having_more_weight() {
+        let mut cell = Cell::new(5);
+
+        // average of the neighbours' values is 4.4 but their weighted average is ~5.57
+        let cardinal_neighbours = vec![Cell::new(9), Cell::new(8)];
+        let diagonal_neighbours = vec![Cell::new(2), Cell::new(2), Cell::new(1)];
+        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+
+        assert_eq!(cell.value, 6);
     }
 }
 
