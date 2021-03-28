@@ -1,3 +1,4 @@
+#[cfg(test)]
 use std::fmt::{Debug, Error, Formatter};
 
 #[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
@@ -10,13 +11,13 @@ impl Cell {
         Cell { value }
     }
 
-    fn sum_of_cells(cells: &Vec<Cell>) -> u8 {
+    fn sum_of_cells(cells: &Vec<&Cell>) -> u8 {
         cells.iter().fold(0, |acc, cell| acc + cell.value)
     }
 
     fn weighted_average_of_neighbours(
-        cardinal_neighbours: &Vec<Cell>,
-        diagonal_neighbours: &Vec<Cell>,
+        cardinal_neighbours: &Vec<&Cell>,
+        diagonal_neighbours: &Vec<&Cell>,
     ) -> f32 {
         let cardinal_sum: u8 = Cell::sum_of_cells(&cardinal_neighbours);
         let diagonal_sum: u8 = Cell::sum_of_cells(&diagonal_neighbours);
@@ -26,15 +27,25 @@ impl Cell {
             / (cardinal_neighbours.len() * 2 + diagonal_neighbours.len()) as f32
     }
 
-    pub fn evolve(&mut self, cardinal_neighbours: Vec<Cell>, diagonal_neighbours: Vec<Cell>) {
+    pub fn evolve(
+        &self,
+        cardinal_neighbours: &Vec<&Cell>,
+        diagonal_neighbours: &Vec<&Cell>,
+    ) -> Cell {
         let weighted_average =
             Cell::weighted_average_of_neighbours(&cardinal_neighbours, &diagonal_neighbours);
         let rounded_average = f32::round(weighted_average) as u8;
 
         if rounded_average > self.value {
-            self.value = self.value + 1;
+            Cell {
+                value: self.value + 1,
+            }
         } else if rounded_average < self.value {
-            self.value = self.value - 1;
+            Cell {
+                value: self.value - 1,
+            }
+        } else {
+            Cell { value: self.value }
         }
     }
 }
@@ -76,6 +87,59 @@ impl Universe {
     pub fn cells(&self) -> &Vec<Cell> {
         &self.cells
     }
+
+    fn get_cell_index(&self, col: u8, row: u8) -> usize {
+        (row * self.width + col) as usize
+    }
+
+    pub fn evolve(&mut self) {
+        let mut new_cells: Vec<Cell> = Vec::with_capacity((self.width * self.height) as usize);
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let cell_index = self.get_cell_index(col, row);
+
+                let mut cardinal_neighbours: Vec<&Cell> = Vec::new();
+                let mut diagonal_neighbours: Vec<&Cell> = Vec::new();
+
+                if row > 0 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row - 1)]);
+
+                    if col > 0 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col - 1, row - 1)]);
+                    }
+                    if col < self.width - 1 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col + 1, row - 1)]);
+                    }
+                }
+                if row < self.height - 1 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col, row + 1)]);
+
+                    if col > 0 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col - 1, row + 1)]);
+                    }
+                    if col < self.width - 1 {
+                        diagonal_neighbours
+                            .push(&self.cells[self.get_cell_index(col + 1, row + 1)]);
+                    }
+                }
+                if col > 0 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col - 1, row)]);
+                }
+                if col < self.width - 1 {
+                    cardinal_neighbours.push(&self.cells[self.get_cell_index(col + 1, row)]);
+                }
+
+                new_cells.push(
+                    self.cells[cell_index].evolve(&cardinal_neighbours, &diagonal_neighbours),
+                );
+            }
+        }
+
+        self.cells = new_cells;
+    }
 }
 
 #[cfg(test)]
@@ -103,38 +167,51 @@ mod cell_tests {
 
     #[test]
     fn cell_evolves_to_higher_value_if_rounded_average_of_neighbours_is_higher() {
-        let mut cell = Cell::new(5);
+        let original_cell = Cell::new(5);
+
+        // these must be created as variables before referring to them in `vec!`,
+        // otherwise they don't live long enough for the reference to work
+        let five_cell = Cell::new(5);
+        let six_cell = Cell::new(6);
 
         // weighted average of neighbours' values is 5.5
-        let cardinal_neighbours = vec![Cell::new(6), Cell::new(5)];
-        let diagonal_neighbours = vec![Cell::new(6), Cell::new(5)];
-        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+        let cardinal_neighbours = vec![&six_cell, &five_cell];
+        let diagonal_neighbours = vec![&six_cell, &five_cell];
+        let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
-        assert_eq!(cell.value, 6);
+        assert_eq!(new_cell.value, 6);
     }
 
     #[test]
     fn cell_evolves_to_lower_value_if_rounded_average_of_neighbours_is_lower() {
-        let mut cell = Cell::new(5);
+        let original_cell = Cell::new(5);
+
+        let four_cell = Cell::new(4);
+        let five_cell = Cell::new(5);
 
         // weighted average of neighbours' values is ~4.4
-        let cardinal_neighbours = vec![Cell::new(5), Cell::new(4)];
-        let diagonal_neighbours = vec![Cell::new(5), Cell::new(4), Cell::new(4)];
-        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+        let cardinal_neighbours = vec![&five_cell, &four_cell];
+        let diagonal_neighbours = vec![&five_cell, &four_cell, &four_cell];
+        let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
-        assert_eq!(cell.value, 4);
+        assert_eq!(new_cell.value, 4);
     }
 
     #[test]
     fn average_of_neighbours_is_weighted_with_cardinal_neighbours_having_more_weight() {
-        let mut cell = Cell::new(5);
+        let original_cell = Cell::new(5);
+
+        let one_cell = Cell::new(1);
+        let two_cell = Cell::new(2);
+        let eight_cell = Cell::new(8);
+        let nine_cell = Cell::new(9);
 
         // average of the neighbours' values is 4.4 but their weighted average is ~5.57
-        let cardinal_neighbours = vec![Cell::new(9), Cell::new(8)];
-        let diagonal_neighbours = vec![Cell::new(2), Cell::new(2), Cell::new(1)];
-        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+        let cardinal_neighbours = vec![&nine_cell, &eight_cell];
+        let diagonal_neighbours = vec![&two_cell, &two_cell, &one_cell];
+        let new_cell = original_cell.evolve(&cardinal_neighbours, &diagonal_neighbours);
 
-        assert_eq!(cell.value, 6);
+        assert_eq!(new_cell.value, 6);
     }
 }
 
@@ -173,9 +250,11 @@ mod universe_tests {
     #[test]
     fn cells_of_universe_should_evolve() {
         let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
-        let universe = Universe::new(cells);
+        let expected_cells = vec![Cell::new(2), Cell::new(2), Cell::new(2), Cell::new(3)];
 
-        // just debug print the universe for now (actual test TBD)
-        println!("{:#?}", universe);
+        let mut universe = Universe::new(cells);
+        universe.evolve();
+
+        assert_eq!(universe.cells(), &expected_cells);
     }
 }
