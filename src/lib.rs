@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Error, Formatter};
 
-#[derive(Debug)]
+#[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
 pub struct Cell {
     value: u8,
 }
@@ -9,20 +9,33 @@ impl Cell {
     pub fn new(value: u8) -> Cell {
         Cell { value }
     }
-}
 
-#[cfg(test)]
-impl Clone for Cell {
-    fn clone(&self) -> Self {
-        Cell {
-            value: self.value
-        }
+    fn sum_of_cells(cells: &Vec<Cell>) -> u8 {
+        cells.iter().fold(0, |acc, cell| acc + cell.value)
     }
-}
-#[cfg(test)]
-impl PartialEq for Cell {
-    fn eq(&self, other: &Self) -> bool {
-        self.value == other.value
+
+    fn weighted_average_of_neighbours(
+        cardinal_neighbours: &Vec<Cell>,
+        diagonal_neighbours: &Vec<Cell>,
+    ) -> f32 {
+        let cardinal_sum: u8 = Cell::sum_of_cells(&cardinal_neighbours);
+        let diagonal_sum: u8 = Cell::sum_of_cells(&diagonal_neighbours);
+
+        // weighted average: cardinal neighbours have double the weight of diagonal neighbours
+        (cardinal_sum * 2 + diagonal_sum) as f32
+            / (cardinal_neighbours.len() * 2 + diagonal_neighbours.len()) as f32
+    }
+
+    pub fn evolve(&mut self, cardinal_neighbours: Vec<Cell>, diagonal_neighbours: Vec<Cell>) {
+        let weighted_average =
+            Cell::weighted_average_of_neighbours(&cardinal_neighbours, &diagonal_neighbours);
+        let rounded_average = f32::round(weighted_average) as u8;
+
+        if rounded_average > self.value {
+            self.value = self.value + 1;
+        } else if rounded_average < self.value {
+            self.value = self.value - 1;
+        }
     }
 }
 
@@ -85,6 +98,47 @@ impl Debug for Universe {
 }
 
 #[cfg(test)]
+mod cell_tests {
+    use crate::Cell;
+
+    #[test]
+    fn cell_evolves_to_higher_value_if_rounded_average_of_neighbours_is_higher() {
+        let mut cell = Cell::new(5);
+
+        // weighted average of neighbours' values is 5.5
+        let cardinal_neighbours = vec![Cell::new(6), Cell::new(5)];
+        let diagonal_neighbours = vec![Cell::new(6), Cell::new(5)];
+        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+
+        assert_eq!(cell.value, 6);
+    }
+
+    #[test]
+    fn cell_evolves_to_lower_value_if_rounded_average_of_neighbours_is_lower() {
+        let mut cell = Cell::new(5);
+
+        // weighted average of neighbours' values is ~4.4
+        let cardinal_neighbours = vec![Cell::new(5), Cell::new(4)];
+        let diagonal_neighbours = vec![Cell::new(5), Cell::new(4), Cell::new(4)];
+        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+
+        assert_eq!(cell.value, 4);
+    }
+
+    #[test]
+    fn average_of_neighbours_is_weighted_with_cardinal_neighbours_having_more_weight() {
+        let mut cell = Cell::new(5);
+
+        // average of the neighbours' values is 4.4 but their weighted average is ~5.57
+        let cardinal_neighbours = vec![Cell::new(9), Cell::new(8)];
+        let diagonal_neighbours = vec![Cell::new(2), Cell::new(2), Cell::new(1)];
+        cell.evolve(cardinal_neighbours, diagonal_neighbours);
+
+        assert_eq!(cell.value, 6);
+    }
+}
+
+#[cfg(test)]
 mod universe_tests {
     use crate::{Cell, Universe};
 
@@ -111,7 +165,8 @@ mod universe_tests {
         let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
         let universe = Universe::new(cells);
 
-        let expected_cells: Vec<Cell> = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
+        let expected_cells: Vec<Cell> =
+            vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
         assert_eq!(universe.cells(), &expected_cells);
     }
 
