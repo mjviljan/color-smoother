@@ -1,7 +1,10 @@
+use wasm_bindgen::prelude::*;
+
 #[cfg(test)]
 use std::fmt::{Debug, Error, Formatter};
 
 #[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
+#[wasm_bindgen]
 pub struct Cell {
     value: u8,
 }
@@ -50,6 +53,7 @@ impl Cell {
     }
 }
 
+#[wasm_bindgen]
 pub struct Universe {
     width: u8,
     height: u8,
@@ -57,7 +61,7 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn new(cells: Vec<Cell>) -> Universe {
+    pub fn _new(cells: Vec<Cell>) -> Universe {
         let root = f32::sqrt(cells.len() as f32);
 
         if root.fract() != 0.0 {
@@ -139,6 +143,24 @@ impl Universe {
         }
 
         self.cells = new_cells;
+    }
+}
+
+#[wasm_bindgen]
+impl Universe {
+    pub fn new(width: u8, height: u8) -> Universe {
+        let cell_count = width * height;
+        let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
+
+        for i in 0..cell_count {
+            cells.push(Cell::new(i));
+        }
+
+        Universe::_new(cells)
+    }
+
+    pub fn jscells(&self) -> *const Cell {
+        self.cells.as_ptr()
     }
 }
 
@@ -224,7 +246,7 @@ mod universe_tests {
         let expected_side_length: u8 = 5;
 
         let cells = vec![Cell::new(1); expected_side_length.pow(2) as usize];
-        let universe = Universe::new(cells);
+        let universe = Universe::_new(cells);
 
         assert_eq!(universe.width, expected_side_length);
         assert_eq!(universe.height, expected_side_length);
@@ -234,13 +256,13 @@ mod universe_tests {
     #[should_panic]
     fn cells_with_non_power_of_two_length_fail_to_create_universe() {
         let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3)];
-        Universe::new(cells);
+        Universe::_new(cells);
     }
 
     #[test]
     fn cells_of_universe_should_match_created_ones_before_evolution() {
         let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
-        let universe = Universe::new(cells);
+        let universe = Universe::_new(cells);
 
         let expected_cells: Vec<Cell> =
             vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
@@ -252,7 +274,7 @@ mod universe_tests {
         let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
         let expected_cells = vec![Cell::new(2), Cell::new(2), Cell::new(2), Cell::new(3)];
 
-        let mut universe = Universe::new(cells);
+        let mut universe = Universe::_new(cells);
         universe.evolve();
 
         assert_eq!(universe.cells(), &expected_cells);

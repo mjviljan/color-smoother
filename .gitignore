@@ -1,1 +1,10 @@
-/target
+# TypeScript + Vite
+node_modules
+dist
+
+# Rust
+target/
+#Cargo.lock
+
+# IDEA configs (not included in global .gitignore)
+*.iml
