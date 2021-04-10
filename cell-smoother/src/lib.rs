@@ -61,25 +61,6 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn _new(cells: Vec<Cell>) -> Universe {
-        let root = f32::sqrt(cells.len() as f32);
-
-        if root.fract() != 0.0 {
-            panic!("Can't create a square universe with given cells");
-        }
-
-        // safe because root can't have fractions here
-        unsafe {
-            let side: u8 = root.to_int_unchecked();
-
-            Universe {
-                width: side,
-                height: side,
-                cells,
-            }
-        }
-    }
-
     pub fn width(&self) -> u8 {
         self.width
     }
@@ -156,7 +137,11 @@ impl Universe {
             cells.push(Cell::new(i));
         }
 
-        Universe::_new(cells)
+        Universe {
+            width,
+            height,
+            cells,
+        }
     }
 
     pub fn jscells(&self) -> *const Cell {
@@ -254,24 +239,6 @@ mod universe_tests {
 
     fn create_cells(values: Vec<u8>) -> Vec<Cell> {
         values.into_iter().map(|v| Cell::new(v)).collect()
-    }
-
-    #[test]
-    fn cells_with_power_of_two_length_creates_universe_with_root_of_length_sides() {
-        let expected_side_length: u8 = 5;
-
-        let cells = vec![Cell::new(1); expected_side_length.pow(2) as usize];
-        let universe = Universe::_new(cells);
-
-        assert_eq!(universe.width, expected_side_length);
-        assert_eq!(universe.height, expected_side_length);
-    }
-
-    #[test]
-    #[should_panic]
-    fn cells_with_non_power_of_two_length_fail_to_create_universe() {
-        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3)];
-        Universe::_new(cells);
     }
 
     #[test]
