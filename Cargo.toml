@@ -1,7 +1,0 @@
-[package]
-name = "color-smoother"
-version = "0.1.0"
-authors = ["Mika Viljanen <mika.viljanen@iki.fi>"]
-edition = "2018"
-
-[dependencies]

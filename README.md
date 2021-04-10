@@ -10,4 +10,12 @@ The cells evolve by trying to blend in into their surroundings. They do this by 
 
 My hypothesis is that the cells of the universe should blend into their neighbours so that the universe will become significantly smoother over time, possibly reaching an equilibrium of sorts where no cell changes its shade anymore. On the other hand it's also possible that neighbouring cells switch back and forth between two shades because of their neighbour doing the same (in the other direction), and they keep doing this forever.
 
-The whole idea of doing a graphical presentation of this stems from my curiosity to see what actually happens. I could find out by doing some calculations manually and without any visual output but that wouldn't be nearly as fun.  
+The whole idea of doing a graphical presentation of this stems from my curiosity to see what actually happens. I could find out by doing some calculations manually and without any visual output but that wouldn't be nearly as fun.
+
+## Setup
+
+You can test the project locally by running:
+```
+npm install
+npm run dev
+```
