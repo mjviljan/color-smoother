@@ -3,8 +3,8 @@ use wasm_bindgen::prelude::*;
 #[cfg(test)]
 use std::fmt::{Debug, Error, Formatter};
 
-#[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
 #[wasm_bindgen]
+#[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
 pub struct Cell {
     value: u8,
 }
@@ -165,6 +165,17 @@ impl Universe {
 }
 
 #[cfg(test)]
+impl Universe {
+    pub fn set_cells(&mut self, cells: &Vec<Cell>) {
+        assert_eq!(cells.len(), (&self.width * &self.height) as usize);
+
+        for i in 0..self.cells.len() {
+            self.cells[i] = Cell::new(cells[i].value);
+        }
+    }
+}
+
+#[cfg(test)]
 impl Debug for Universe {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         let mut s: String = "".to_owned();
@@ -241,6 +252,10 @@ mod cell_tests {
 mod universe_tests {
     use crate::{Cell, Universe};
 
+    fn create_cells(values: Vec<u8>) -> Vec<Cell> {
+        values.into_iter().map(|v| Cell::new(v)).collect()
+    }
+
     #[test]
     fn cells_with_power_of_two_length_creates_universe_with_root_of_length_sides() {
         let expected_side_length: u8 = 5;
@@ -261,20 +276,23 @@ mod universe_tests {
 
     #[test]
     fn cells_of_universe_should_match_created_ones_before_evolution() {
-        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
-        let universe = Universe::_new(cells);
+        let mut universe = Universe::new(2, 2);
+        // let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
+        let cells = create_cells(vec![1, 2, 3, 4]);
+        universe.set_cells(&cells);
 
-        let expected_cells: Vec<Cell> =
-            vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
+        let expected_cells = create_cells(vec![1, 2, 3, 4]);
         assert_eq!(universe.cells(), &expected_cells);
     }
 
     #[test]
     fn cells_of_universe_should_evolve() {
-        let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
-        let expected_cells = vec![Cell::new(2), Cell::new(2), Cell::new(2), Cell::new(3)];
+        let mut universe = Universe::new(2, 2);
+        let cells = create_cells(vec![1, 3, 3, 3]);
+        universe.set_cells(&cells);
 
-        let mut universe = Universe::_new(cells);
+        let expected_cells = create_cells(vec![2, 2, 2, 3]);
+
         universe.evolve();
 
         assert_eq!(universe.cells(), &expected_cells);
