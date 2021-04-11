@@ -61,14 +61,6 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn width(&self) -> u8 {
-        self.width
-    }
-
-    pub fn height(&self) -> u8 {
-        self.height
-    }
-
     pub fn cells(&self) -> &Vec<Cell> {
         &self.cells
     }
@@ -130,11 +122,11 @@ impl Universe {
 #[wasm_bindgen]
 impl Universe {
     pub fn new(width: u8, height: u8) -> Universe {
-        let cell_count = width * height;
+        let cell_count: u16 = width as u16 * height as u16;
         let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
 
         for i in 0..cell_count {
-            cells.push(Cell::new(i));
+            cells.push(Cell::new((i % 16) as u8));
         }
 
         Universe {
@@ -242,9 +234,40 @@ mod universe_tests {
     }
 
     #[test]
+    fn universe_should_be_created_with_right_amount_of_cells() {
+        let width: u8 = 8;
+        let height: u8 = 7;
+        let universe = Universe::new(width, height);
+
+        assert_eq!(universe.cells().len(), (width * height) as usize);
+    }
+
+    #[test]
+    fn universe_should_be_created_with_cell_values_ranging_from_0_to_15() {
+        let width: u8 = 25;
+        let height: u8 = 25;
+        let universe = Universe::new(width, height);
+
+        let mut counts: Vec<u16> = vec![0; 16];
+        for i in 0..universe.cells.len() {
+            let val = universe.cells[i].value as usize;
+            counts[val] = counts[val] + 1;
+        }
+
+        // Check that each value is at least in one cell; in theory this can sometimes
+        // fail as the values as set randomly but this should be very unlikely
+        // due to the size of the test universe.
+        for i in 0..counts.len() {
+            assert!(counts[i] > 0);
+        }
+
+        // there is no need to check for values below zero or above 15 here separately
+        // as such values would cause a panic in the first `for` loop
+    }
+
+    #[test]
     fn cells_of_universe_should_match_created_ones_before_evolution() {
         let mut universe = Universe::new(2, 2);
-        // let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
         let cells = create_cells(vec![1, 2, 3, 4]);
         universe.set_cells(&cells);
 
