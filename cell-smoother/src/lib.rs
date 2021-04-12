@@ -128,7 +128,7 @@ impl Universe {
 
         let mut rng = rand::thread_rng();
         for _ in 0..cell_count {
-            cells.push(Cell::new(rng.gen_range(0..16)));
+            cells.push(Cell::new(rng.gen_range(0, 16)));
         }
 
         Universe {
