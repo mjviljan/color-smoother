@@ -1,3 +1,4 @@
+use rand::Rng;
 use wasm_bindgen::prelude::*;
 
 #[cfg(test)]
@@ -125,8 +126,9 @@ impl Universe {
         let cell_count: u16 = width as u16 * height as u16;
         let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
 
-        for i in 0..cell_count {
-            cells.push(Cell::new((i % 16) as u8));
+        let mut rng = rand::thread_rng();
+        for _ in 0..cell_count {
+            cells.push(Cell::new(rng.gen_range(0..16)));
         }
 
         Universe {
@@ -240,6 +242,18 @@ mod universe_tests {
         let universe = Universe::new(width, height);
 
         assert_eq!(universe.cells().len(), (width * height) as usize);
+    }
+
+    #[test]
+    fn universe_should_be_created_with_random_cells() {
+        let width: u8 = 25;
+        let height: u8 = 25;
+        let first_universe = Universe::new(width, height);
+        let second_universe = Universe::new(width, height);
+
+        // in theory this can sometimes fail as the values as set randomly but
+        // this should be very unlikely due to the size of the test universe
+        assert_ne!(first_universe.cells, second_universe.cells);
     }
 
     #[test]
