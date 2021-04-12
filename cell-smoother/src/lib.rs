@@ -1,10 +1,11 @@
+use rand::Rng;
 use wasm_bindgen::prelude::*;
 
 #[cfg(test)]
 use std::fmt::{Debug, Error, Formatter};
 
-#[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
 #[wasm_bindgen]
+#[cfg_attr(test, derive(Debug, Clone, Eq, PartialEq))]
 pub struct Cell {
     value: u8,
 }
@@ -61,33 +62,6 @@ pub struct Universe {
 }
 
 impl Universe {
-    pub fn _new(cells: Vec<Cell>) -> Universe {
-        let root = f32::sqrt(cells.len() as f32);
-
-        if root.fract() != 0.0 {
-            panic!("Can't create a square universe with given cells");
-        }
-
-        // safe because root can't have fractions here
-        unsafe {
-            let side: u8 = root.to_int_unchecked();
-
-            Universe {
-                width: side,
-                height: side,
-                cells,
-            }
-        }
-    }
-
-    pub fn width(&self) -> u8 {
-        self.width
-    }
-
-    pub fn height(&self) -> u8 {
-        self.height
-    }
-
     pub fn cells(&self) -> &Vec<Cell> {
         &self.cells
     }
@@ -149,18 +123,34 @@ impl Universe {
 #[wasm_bindgen]
 impl Universe {
     pub fn new(width: u8, height: u8) -> Universe {
-        let cell_count = width * height;
+        let cell_count: u16 = width as u16 * height as u16;
         let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
 
-        for i in 0..cell_count {
-            cells.push(Cell::new(i));
+        let mut rng = rand::thread_rng();
+        for _ in 0..cell_count {
+            cells.push(Cell::new(rng.gen_range(0, 16)));
         }
 
-        Universe::_new(cells)
+        Universe {
+            width,
+            height,
+            cells,
+        }
     }
 
     pub fn jscells(&self) -> *const Cell {
         self.cells.as_ptr()
+    }
+}
+
+#[cfg(test)]
+impl Universe {
+    pub fn set_cells(&mut self, cells: &Vec<Cell>) {
+        assert_eq!(cells.len(), (&self.width * &self.height) as usize);
+
+        for i in 0..self.cells.len() {
+            self.cells[i] = Cell::new(cells[i].value);
+        }
     }
 }
 
@@ -241,40 +231,72 @@ mod cell_tests {
 mod universe_tests {
     use crate::{Cell, Universe};
 
-    #[test]
-    fn cells_with_power_of_two_length_creates_universe_with_root_of_length_sides() {
-        let expected_side_length: u8 = 5;
-
-        let cells = vec![Cell::new(1); expected_side_length.pow(2) as usize];
-        let universe = Universe::_new(cells);
-
-        assert_eq!(universe.width, expected_side_length);
-        assert_eq!(universe.height, expected_side_length);
+    fn create_cells(values: Vec<u8>) -> Vec<Cell> {
+        values.into_iter().map(|v| Cell::new(v)).collect()
     }
 
     #[test]
-    #[should_panic]
-    fn cells_with_non_power_of_two_length_fail_to_create_universe() {
-        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3)];
-        Universe::_new(cells);
+    fn universe_should_be_created_with_right_amount_of_cells() {
+        let width: u8 = 8;
+        let height: u8 = 7;
+        let universe = Universe::new(width, height);
+
+        assert_eq!(universe.cells().len(), (width * height) as usize);
+    }
+
+    #[test]
+    fn universe_should_be_created_with_random_cells() {
+        let width: u8 = 25;
+        let height: u8 = 25;
+        let first_universe = Universe::new(width, height);
+        let second_universe = Universe::new(width, height);
+
+        // in theory this can sometimes fail as the values as set randomly but
+        // this should be very unlikely due to the size of the test universe
+        assert_ne!(first_universe.cells, second_universe.cells);
+    }
+
+    #[test]
+    fn universe_should_be_created_with_cell_values_ranging_from_0_to_15() {
+        let width: u8 = 25;
+        let height: u8 = 25;
+        let universe = Universe::new(width, height);
+
+        let mut counts: Vec<u16> = vec![0; 16];
+        for i in 0..universe.cells.len() {
+            let val = universe.cells[i].value as usize;
+            counts[val] = counts[val] + 1;
+        }
+
+        // Check that each value is at least in one cell; in theory this can sometimes
+        // fail as the values as set randomly but this should be very unlikely
+        // due to the size of the test universe.
+        for i in 0..counts.len() {
+            assert!(counts[i] > 0);
+        }
+
+        // there is no need to check for values below zero or above 15 here separately
+        // as such values would cause a panic in the first `for` loop
     }
 
     #[test]
     fn cells_of_universe_should_match_created_ones_before_evolution() {
-        let cells = vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
-        let universe = Universe::_new(cells);
+        let mut universe = Universe::new(2, 2);
+        let cells = create_cells(vec![1, 2, 3, 4]);
+        universe.set_cells(&cells);
 
-        let expected_cells: Vec<Cell> =
-            vec![Cell::new(1), Cell::new(2), Cell::new(3), Cell::new(4)];
+        let expected_cells = create_cells(vec![1, 2, 3, 4]);
         assert_eq!(universe.cells(), &expected_cells);
     }
 
     #[test]
     fn cells_of_universe_should_evolve() {
-        let cells = vec![Cell::new(1), Cell::new(3), Cell::new(3), Cell::new(3)];
-        let expected_cells = vec![Cell::new(2), Cell::new(2), Cell::new(2), Cell::new(3)];
+        let mut universe = Universe::new(2, 2);
+        let cells = create_cells(vec![1, 3, 3, 3]);
+        universe.set_cells(&cells);
 
-        let mut universe = Universe::_new(cells);
+        let expected_cells = create_cells(vec![2, 2, 2, 3]);
+
         universe.evolve();
 
         assert_eq!(universe.cells(), &expected_cells);

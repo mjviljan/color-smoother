@@ -15,8 +15,8 @@ const run = async () => {
   // initialize Wasm object
   const { memory } = await init();
 
-  const width = 4;
-  const height = 4;
+  const width = 10;
+  const height = 6;
   const universe = Universe.new(width, height);
 
   const cellsPtr = universe.jscells();
