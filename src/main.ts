@@ -10,6 +10,10 @@ const cellsToGrid = (cells: Uint8Array, width: number): string =>
     return acc + str;
   }, "");
 
+const evolveUniverse = () => {
+  console.log("Universe evolved.");
+};
+
 // must be a function as ESbuild doesn't support top-level `await` (needed in wasm initialization)
 const run = async () => {
   // initialize Wasm object
@@ -28,6 +32,11 @@ const run = async () => {
     pre.innerText = cellsToGrid(cells, width);
 
     container.appendChild(pre);
+  }
+
+  const evolveButton = document.getElementById("evolve");
+  if (evolveButton) {
+    evolveButton.onclick = evolveUniverse;
   }
 };
 
