@@ -10,10 +10,6 @@ const cellsToGrid = (cells: Uint8Array, width: number): string =>
     return acc + str;
   }, "");
 
-const evolveUniverse = () => {
-  console.log("Universe evolved.");
-};
-
 // must be a function as ESbuild doesn't support top-level `await` (needed in wasm initialization)
 const run = async () => {
   // initialize Wasm object
@@ -23,20 +19,29 @@ const run = async () => {
   const height = 6;
   const universe = Universe.new(width, height);
 
-  const cellsPtr = universe.jscells();
-  const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+  let cellsPtr = universe.jscells();
+  let cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+
+  const drawUniverse = (elem: HTMLElement) => {
+    elem.innerText = cellsToGrid(cells, width);
+  };
 
   const container = document.getElementById("root");
   if (container) {
     const pre = document.createElement("pre");
-    pre.innerText = cellsToGrid(cells, width);
+    drawUniverse(pre);
 
     container.appendChild(pre);
-  }
 
-  const evolveButton = document.getElementById("evolve");
-  if (evolveButton) {
-    evolveButton.onclick = evolveUniverse;
+    const evolveUniverse = () => {
+      universe.evolve();
+      drawUniverse(pre);
+    };
+
+    const evolveButton = document.getElementById("evolve");
+    if (evolveButton) {
+      evolveButton.onclick = evolveUniverse;
+    }
   }
 };
 
