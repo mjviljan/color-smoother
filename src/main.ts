@@ -30,7 +30,7 @@ const run = async () => {
   const height = 20;
   const universe = Universe.new(width, height);
 
-  let cellsPtr = universe.jscells();
+  let cellsPtr = universe.cells_ptr();
   let cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
 
   const drawUniverse = (elem: HTMLElement) => {
