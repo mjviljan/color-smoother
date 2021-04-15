@@ -69,6 +69,29 @@ impl Universe {
     fn get_cell_index(&self, col: u8, row: u8) -> usize {
         (row * self.width + col) as usize
     }
+}
+
+#[wasm_bindgen]
+impl Universe {
+    pub fn new(width: u8, height: u8) -> Universe {
+        let cell_count: u16 = width as u16 * height as u16;
+        let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
+
+        let mut rng = rand::thread_rng();
+        for _ in 0..cell_count {
+            cells.push(Cell::new(rng.gen_range(0, 16)));
+        }
+
+        Universe {
+            width,
+            height,
+            cells,
+        }
+    }
+
+    pub fn cells_ptr(&self) -> *const Cell {
+        self.cells.as_ptr()
+    }
 
     pub fn evolve(&mut self) {
         let mut new_cells: Vec<Cell> = Vec::with_capacity((self.width * self.height) as usize);
@@ -116,30 +139,17 @@ impl Universe {
             }
         }
 
-        self.cells = new_cells;
-    }
-}
-
-#[wasm_bindgen]
-impl Universe {
-    pub fn new(width: u8, height: u8) -> Universe {
-        let cell_count: u16 = width as u16 * height as u16;
-        let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
-
-        let mut rng = rand::thread_rng();
-        for _ in 0..cell_count {
-            cells.push(Cell::new(rng.gen_range(0, 16)));
+        // Here a simple assignment
+        // ```
+        // self.cells = new_cells;
+        // ```
+        // would work also but that will update also the pointer to `self.cells`
+        // (as the new cells are stored elsewhere in memory) and thus the pointer
+        // shared with Wasm would become outdated. To keep the pointer valid
+        // the new cells are copied to the old allocated memory here.
+        for i in 0..self.cells.len() {
+            self.cells[i].value = new_cells[i].value;
         }
-
-        Universe {
-            width,
-            height,
-            cells,
-        }
-    }
-
-    pub fn jscells(&self) -> *const Cell {
-        self.cells.as_ptr()
     }
 }
 
