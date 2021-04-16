@@ -12,10 +12,19 @@ My hypothesis is that the cells of the universe should blend into their neighbou
 
 The whole idea of doing a graphical presentation of this stems from my curiosity to see what actually happens. I could find out by doing some calculations manually and without any visual output but that wouldn't be nearly as fun.
 
-## Setup
+## Requirements
 
-You can test the project locally by running:
+For running the app, you need:
+- [Node](https://nodejs.org/en/download/)
+- [Rust](https://www.rust-lang.org/tools/install) 
+- [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+
+## Running the app
+
+Once you've cloned the project repo, you can test the project locally by running:
 ```
 npm install
 npm run dev
 ```
+
+The initial build can take some time and doesn't output much while it's running. So it may seem like it has finished or frozen but just give it a couple of minutes and it should show you the URLs you can access.
