@@ -67,7 +67,7 @@ impl Universe {
     }
 
     fn get_cell_index(&self, col: u8, row: u8) -> usize {
-        (row * self.width + col) as usize
+        (row as u16 * self.width as u16 + col as u16) as usize
     }
 }
 
@@ -94,7 +94,8 @@ impl Universe {
     }
 
     pub fn evolve(&mut self) {
-        let mut new_cells: Vec<Cell> = Vec::with_capacity((self.width * self.height) as usize);
+        let mut new_cells: Vec<Cell> = Vec::with_capacity(self.cells.len());
+
         for row in 0..self.height {
             for col in 0..self.width {
                 let cell_index = self.get_cell_index(col, row);
@@ -247,11 +248,11 @@ mod universe_tests {
 
     #[test]
     fn universe_should_be_created_with_right_amount_of_cells() {
-        let width: u8 = 8;
-        let height: u8 = 7;
+        let width: u8 = 20;
+        let height: u8 = 20;
         let universe = Universe::new(width, height);
 
-        assert_eq!(universe.cells().len(), (width * height) as usize);
+        assert_eq!(universe.cells().len(), (width as u16 * height as u16) as usize);
     }
 
     #[test]
