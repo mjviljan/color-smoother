@@ -49,7 +49,7 @@ const run = async () => {
   // initialize Wasm object
   ({ memory } = await init());
 
-  const container = document.getElementById("root");
+  const container = document.getElementById("cells");
   if (container) {
     const pre = document.createElement("pre");
     let { universe, cells } = createUniverse();

@@ -1,0 +1,36 @@
+.main {
+    display: flex;
+}
+
+.main pre {
+    margin: 0;
+}
+
+.control-area {
+    display: flex;
+    flex-direction: column;
+}
+
+.evolution-button {
+    margin: 10px;
+    width: 100px;
+    height: 100px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgb(0, 215, 215), rgb(0, 63, 63));
+}
+.evolution-button:active {
+    background: linear-gradient(135deg, rgb(0, 185, 185), rgb(0, 33, 33));
+}
+.button-cap {
+    display: inline-block;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background-color: rgb(0, 127, 127);
+    line-height: 84px;
+    font-size: 20px;
+}
+.evolution-button:active .button-cap {
+    background-color: rgb(0, 100, 100);
+}
