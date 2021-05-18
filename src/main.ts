@@ -10,10 +10,10 @@ const cellsToGrid = (cells: Uint8Array, width: number): HTMLElement => {
 
   cells.forEach((cellValue, i) => {
     const cellElement = document.createElement("span");
-    cellElement.innerText = "▉";
+    cellElement.innerText = "  ";
     cellElement.setAttribute(
       "style",
-      "color: rgb(0, " + cellValue * 16 + ", 0)"
+      "background-color: rgb(0, " + cellValue * 16 + ", 0)"
     );
     grid.appendChild(cellElement);
 
