@@ -56,8 +56,8 @@ impl Cell {
 
 #[wasm_bindgen]
 pub struct Universe {
-    width: u8,
-    height: u8,
+    width: usize,
+    height: usize,
     cells: Vec<Cell>,
 }
 
@@ -66,16 +66,16 @@ impl Universe {
         &self.cells
     }
 
-    fn get_cell_index(&self, col: u8, row: u8) -> usize {
-        (row as u16 * self.width as u16 + col as u16) as usize
+    fn get_cell_index(&self, col: usize, row: usize) -> usize {
+        row * self.width + col
     }
 }
 
 #[wasm_bindgen]
 impl Universe {
-    pub fn new(width: u8, height: u8) -> Universe {
-        let cell_count: u16 = width as u16 * height as u16;
-        let mut cells: Vec<Cell> = Vec::with_capacity(cell_count as usize);
+    pub fn new(width: usize, height: usize) -> Universe {
+        let cell_count: usize = width * height;
+        let mut cells: Vec<Cell> = Vec::with_capacity(cell_count);
 
         let mut rng = rand::thread_rng();
         for _ in 0..cell_count {
@@ -248,8 +248,8 @@ mod universe_tests {
 
     #[test]
     fn universe_should_be_created_with_right_amount_of_cells() {
-        let width: u8 = 20;
-        let height: u8 = 20;
+        let width: usize = 20;
+        let height: usize = 20;
         let universe = Universe::new(width, height);
 
         assert_eq!(universe.cells().len(), (width as u16 * height as u16) as usize);
@@ -257,8 +257,8 @@ mod universe_tests {
 
     #[test]
     fn universe_should_be_created_with_random_cells() {
-        let width: u8 = 25;
-        let height: u8 = 25;
+        let width: usize = 25;
+        let height: usize = 25;
         let first_universe = Universe::new(width, height);
         let second_universe = Universe::new(width, height);
 
@@ -269,8 +269,8 @@ mod universe_tests {
 
     #[test]
     fn universe_should_be_created_with_cell_values_ranging_from_0_to_15() {
-        let width: u8 = 25;
-        let height: u8 = 25;
+        let width: usize = 25;
+        let height: usize = 25;
         let universe = Universe::new(width, height);
 
         let mut counts: Vec<u16> = vec![0; 16];
