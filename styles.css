@@ -1,3 +1,7 @@
+body {
+    background-color: rgb(0, 100, 100);
+}
+
 .main {
     display: flex;
 }
@@ -5,6 +9,10 @@
 .main pre {
     margin: 0;
     font-size: 14pt;
+}
+
+.universe {
+    border: solid 2px black;
 }
 
 .control-area {
