@@ -10,10 +10,10 @@ const cellsToGrid = (cells: Uint8Array, width: number): HTMLElement => {
 
   cells.forEach((cellValue, i) => {
     const cellElement = document.createElement("span");
-    cellElement.innerText = "▉";
+    cellElement.innerText = "  ";
     cellElement.setAttribute(
       "style",
-      "color: rgb(0, " + cellValue * 16 + ", 0)"
+      "background-color: rgb(0, " + cellValue * 16 + ", 0)"
     );
     grid.appendChild(cellElement);
 
@@ -49,7 +49,7 @@ const run = async () => {
   // initialize Wasm object
   ({ memory } = await init());
 
-  const container = document.getElementById("root");
+  const container = document.getElementById("cells");
   if (container) {
     const pre = document.createElement("pre");
     let { universe, cells } = createUniverse();

@@ -4,11 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Smoother</title>
+    <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-<div id="root"></div>
-<button id="reset">Reset</button>
-<button id="evolve">Evolve</button>
+<div class="main">
+    <div id="cells" class="universe"></div>
+    <div id="controls" class="control-area">
+        <button id="reset" class="evolution-button">
+            <span class="button-cap">Reset</span>
+        </button>
+        <button id="evolve" class="evolution-button">
+            <span class="button-cap">Evolve</span>
+        </button>
+    </div>
+</div>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
