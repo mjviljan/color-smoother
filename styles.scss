@@ -1,0 +1,69 @@
+$color-root: teal;
+$color-bg: darken($color-root, 5%);
+$color-button: $color-root;
+$color-button-highlight: lighten($color-button, 15%);
+$color-button-highlight-pressed: lighten($color-button, 10%);
+$color-button-shadow: darken($color-button, 15%);
+$color-button-shadow-pressed: darken($color-button, 20%);
+
+$margin-button: 10px;
+
+$size-button: 100px;
+$size-button-padding: 8px;
+$line-height-button: $size-button - 2 * $size-button-padding;
+
+$border-radius-button: 50%;
+
+$button-3d-effect: linear-gradient(135deg, $color-button-highlight, $color-button-shadow);
+$button-3d-effect-active: linear-gradient(135deg, $color-button-highlight-pressed, $color-button-shadow-pressed);
+
+body {
+  background-color: $color-bg;
+}
+
+.main {
+  display: flex;
+
+  pre {
+    margin: 0;
+    font-size: 14pt;
+  }
+}
+
+.universe {
+  border: solid 2px black;
+}
+
+.control-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.evolution-button {
+  margin: $margin-button;
+  width: $size-button;
+  height: $size-button;
+  padding: $size-button-padding;
+  border: none;
+  border-radius: $border-radius-button;
+  background: $button-3d-effect;
+
+  .button-cap {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    border-radius: $border-radius-button;
+    background-color: $color-button;
+    line-height: $line-height-button;
+    font-size: 20px;
+  }
+
+  &:active {
+    background: $button-3d-effect-active;
+
+    .button-cap {
+      background-color: $color-bg;
+    }
+  }
+}
