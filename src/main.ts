@@ -7,18 +7,23 @@ let memory: WebAssembly.Memory;
 
 const cellsToGrid = (cells: Uint8Array, width: number): HTMLElement => {
   const grid = document.createElement("div");
+  grid.className = "grid-column";
+
+  let gridRow = document.createElement("div");
+  gridRow.className = "grid-row";
 
   cells.forEach((cellValue, i) => {
-    const cellElement = document.createElement("span");
-    cellElement.innerText = "  ";
-    cellElement.setAttribute(
-      "style",
-      "background-color: rgb(0, " + cellValue * 16 + ", 0)"
-    );
-    grid.appendChild(cellElement);
+    const cellElement = document.createElement("div");
+    // if the cell div is empty there's some ghost padding under each cell/row,
+    // but adding some content (e.g. this space and CSS setting `pre`) works...
+    cellElement.innerText = " ";
+    cellElement.className = `cell cell-${cellValue}`;
+    gridRow.appendChild(cellElement);
 
     if ((i + 1) % width === 0) {
-      grid.appendChild(document.createElement("br"));
+      grid.appendChild(gridRow);
+      gridRow = document.createElement("div");
+      gridRow.className = "grid-row";
     }
   });
 
@@ -51,16 +56,12 @@ const run = async () => {
 
   const container = document.getElementById("cells");
   if (container) {
-    const pre = document.createElement("pre");
     let { universe, cells } = createUniverse();
-
-    drawUniverse(pre, cells);
-
-    container.appendChild(pre);
+    drawUniverse(container, cells);
 
     const evolveUniverse = () => {
       universe.evolve();
-      drawUniverse(pre, cells);
+      drawUniverse(container, cells);
     };
 
     const evolveButton = document.getElementById("evolve");
@@ -72,7 +73,7 @@ const run = async () => {
     if (resetButton) {
       resetButton.onclick = () => {
         ({ universe, cells } = createUniverse());
-        drawUniverse(pre, cells);
+        drawUniverse(container, cells);
       };
     }
   }
